@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.OrdermsgDAO">
+    <resultMap type="com.entity.Ordermsg" id="BaseResultMap">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="orderno" property="orderno" jdbcType="VARCHAR"/>
+        <result column="memberid" property="memberid" jdbcType="VARCHAR"/>
+        <result column="total" property="total" jdbcType="VARCHAR"/>
+        <result column="fkstatus" property="fkstatus" jdbcType="VARCHAR"/>
+        <result column="shstatus" property="shstatus" jdbcType="VARCHAR"/>
+        <result column="addrid" property="addrid" jdbcType="INTEGER"/>
+        <result column="company" property="company" jdbcType="VARCHAR"/>
+        <result column="waybillno" property="waybillno" jdbcType="VARCHAR"/>
+        <result column="shfs" property="shfs" jdbcType="VARCHAR"/>
+        <result column="shsavetime" property="shsavetime" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <insert id="add" parameterType="Ordermsg">
+        insert into ordermsg
+        values (null, #{orderno}, #{memberid}, #{total}, #{fkstatus}, '', #{addrid}, now(), #{company}, #{waybillno},
+                #{shfs}, #{shsavetime},#{distributorinfo})
+    </insert>
+
+    <select id="selectPayment" parameterType="Int" resultMap="BaseResultMap">
+        select *
+        from ordermsg
+        where memberid = #{0}
+          and fkstatus = '待付款'
+    </select>
+
+    <select id="selectShouhuo" parameterType="Int" resultMap="BaseResultMap">
+        select *
+        from ordermsg
+        where memberid = #{0}
+          and shstatus = '运送中'
+    </select>
+
+    <select id="selectAccomplish" parameterType="Int" resultMap="BaseResultMap">
+        select *
+        from ordermsg
+        where memberid = #{0}
+          and shstatus = '已收货'
+    </select>
+
+    <update id="payOrder" parameterType="Int">
+        update ordermsg
+        set fkstatus='已付款',
+            shstatus='待发货'
+        where id = #{id}
+    </update>
+    <update id="updatedistributorinfo" parameterType="map">
+        update ordermsg
+        set distributorinfo=#{distributorinfo}
+        where orderno = #{id}
+    </update>
+
+    <select id="selectByOrderno"  resultMap="BaseResultMap">
+        select * from ordermsg where orderno= #{id}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        select * from ordermsg where 1=1
+        <if test="key!=null and key!=''">
+            and orderno like "%"#{key}"%"
+        </if>
+        order by id desc
+    </select>
+
+    <select id="searchOrdername" resultMap="BaseResultMap">
+        select *
+        from ordermsg
+        where orderno like "%"#{order}"%"
+    </select>
+
+    <delete id="delete" parameterType="Int">
+        delete
+        from ordermsg
+        where id = #{id}
+    </delete>
+
+    <select id="findById" parameterType="Int" resultType="Ordermsg">
+        select *
+        from ordermsg
+        where id = #{id}
+    </select>
+
+    <update id="update" parameterType="Ordermsg">
+        update ordermsg
+        <set>
+            <if test="company!=null">
+                company=#{company},
+            </if>
+            <if test="waybillno!=null">
+                waybillno=#{waybillno},
+            </if>
+            <if test="shstatus!=null">
+                shstatus=#{shstatus},
+            </if>
+            <if test="fkstatus!=null">
+                fkstatus=#{fkstatus},
+            </if>
+            <if test="shsavetime!=null">
+                shsavetime=#{shsavetime},
+            </if>
+            <if test="distributorinfo!=null">
+                distributorinfo=#{distributorinfo},
+            </if>
+        </set>
+        where id= #{id}
+    </update>
+
+
+    <select id="selectSaleMoney" resultMap="BaseResultMap">
+        select DISTINCT(DATE_FORMAT(savetime, '%Y-%c-%d')) as savetime, SUM(total) as total
+        from ordermsg
+        where fkstatus = '已付款'
+        GROUP BY DATE_FORMAT(savetime, '%Y-%c-%d')
+        order by DATE_FORMAT(savetime, '%Y-%c-%d')
+    </select>
+
+    <select id="orderNum" resultMap="BaseResultMap">
+        select DISTINCT(DATE_FORMAT(savetime, '%Y-%c-%d')) as savetime, COUNT(*) as orderno
+        from ordermsg
+        where 1 = 1
+        GROUP BY DATE_FORMAT(savetime, '%Y-%c-%d')
+    </select>
+
+
+</mapper>
+
